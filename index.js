@@ -8,6 +8,7 @@ const { Client, LocalAuth } = require("whatsapp-web.js");
 
 const PORT = process.env.PORT;
 const GUSTEAU_API_URL = process.env.GUSTEAU_API_URL;
+const GUSTEAU_GATEWAY_URL = process.env.GUSTEAU_GATEWAY_URL;
 const RESTAURANT_ID = process.env.RESTAURANT_ID; // Must be configured per instance
 const GATEWAY_TOKEN = process.env.GATEWAY_TOKEN; // Token for authentication
 const DEBUG_PHONE_NUMBER = process.env.DEBUG_PHONE_NUMBER; // Optional: Filter messages by phone number
@@ -45,7 +46,7 @@ const client = new Client({
 let lastQrString = "";
 
 client.on("qr", (qrString) => {
-  console.log("QR Received");
+  console.log(`QR Received on: ${GUSTEAU_GATEWAY_URL}/qr`);
   lastQrString = qrString;
 });
 
@@ -133,7 +134,7 @@ app.post("/send", authTokenMiddleware, async (req, res) => {
 });
 
 // QR Endpoint
-app.get("/qr", async (req, res) => {
+app.get("/qr", async (_req, res) => {
   if (!lastQrString) return res.send("Waiting for QR...");
   try {
     const qrImage = await qr.toDataURL(lastQrString);
@@ -144,5 +145,5 @@ app.get("/qr", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Gateway running on http://localhost:${PORT}`);
+  console.log(`🚀 Gateway running on ${GUSTEAU_GATEWAY_URL}`);
 });
