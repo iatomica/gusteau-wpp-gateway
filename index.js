@@ -125,11 +125,49 @@ app.post("/send", authTokenMiddleware, async (req, res) => {
 
   try {
     const chatId = to.includes('@') ? to : `${to}@c.us`;
+    const chat = await client.getChatById(chatId);
+    
+    // Stop typing when sending a message
+    await chat.clearState();
+
     await client.sendMessage(chatId, message);
     res.json({ success: true });
   } catch (error) {
     console.error("❌ Error sending message:", error);
     res.status(500).json({ error: "Failed to send message" });
+  }
+});
+
+// Endpoint to manage chat state (typing, recording, clear)
+app.post("/chat/state", authTokenMiddleware, async (req, res) => {
+  const { to, state } = req.body;
+
+  if (!to || !state) {
+    return res.status(400).json({ error: "Missing 'to' or 'state'" });
+  }
+
+  try {
+    const chatId = to.includes('@') ? to : `${to}@c.us`;
+    const chat = await client.getChatById(chatId);
+
+    switch (state) {
+      case 'typing':
+        await chat.sendStateTyping();
+        break;
+      case 'recording':
+        await chat.sendStateRecording();
+        break;
+      case 'clear':
+        await chat.clearState();
+        break;
+      default:
+        return res.status(400).json({ error: "Invalid state. Use 'typing', 'recording', or 'clear'" });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error(`❌ Error setting chat state to ${state}:`, error);
+    res.status(500).json({ error: "Failed to update chat state" });
   }
 });
 
