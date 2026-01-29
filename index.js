@@ -76,15 +76,20 @@ client.on("message", async (message) => {
     return;
   }
 
-  console.log(`Message from ${message.from}: ${message.body}`);
+  console.log(`Message from ${message.from}: \n${message}`);
 
   try {
+    const contact = await message.getContact();
+    const cleanNumber = contact.number || contact.id.user;
+    const name = contact.pushname || contact.name || message._data.notifyName || 'Unknown';
+    console.log(`👤 Contact info - Number: ${cleanNumber}, Name: ${name}`);
+
     // Forward to Gusteau Backend
     data = {
       restaurantId: RESTAURANT_ID,
       platform: 'whatsapp_js',
-      externalId: message.from.replace('@c.us', ''),
-      customerName: message._data.notifyName || 'Unknown',
+      externalId: cleanNumber,
+      customerName: name,
       content: message.body
     }
     console.log("➡️ Forwarding message to Gusteau:", data);
